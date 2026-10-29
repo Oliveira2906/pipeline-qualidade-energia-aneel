@@ -1,0 +1,29 @@
+# Banco de dados local e caches de dados brutos
+data/*.duckdb
+data/*.duckdb.wal
+data/*.db
+data/cache/
+*.parquet
+
+# Ambientes virtuais Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Variáveis de ambiente e segredos
+.env
+.env.local
+
+# Sistema Operacional / IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
