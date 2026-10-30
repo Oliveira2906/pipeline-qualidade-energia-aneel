@@ -79,24 +79,46 @@ def _build_deterministic_synthesis(con: duckdb.DuckDBPyConnection, ano_ref: int 
     top2_conj = df_top_conj.iloc[1]
     perfil_critico = df_perfil.iloc[0]
 
+    def _dec(val: float) -> str:
+        return f"{val:.2f}".replace(".", ",")
+
+    def _pct(val: float) -> str:
+        return f"{val:.1f}".replace(".", ",")
+
+    def _mil(val: float) -> str:
+        return f"{int(round(val)):,}".replace(",", ".")
+
+    nome_top1 = str(top1_conj["nome_conjunto"]).title()
+    nome_top2 = str(top2_conj["nome_conjunto"]).title()
+
     return (
-        f"### Parecer Executivo Regulatório — Ciclo {ano_ref} (ANEEL DEC & FEC)\n\n"
-        f"1. **Conformidade por Distribuidora (Pergunta 1):** A concessionária com maior pressão regulatória em {ano_ref} é a "
-        f"**{pior_dist['sigla_agente']} ({pior_dist['uf']})**, registrando DEC médio ponderado de **{pior_dist['dec_apurado_ponderado']:.2f}h** "
-        f"contra o limite de **{pior_dist['dec_limite_ponderado']:.2f}h** (Índice de Severidade = **{pior_dist['indice_severidade_dec']:.2f}x** "
-        f"e **{pior_dist['pct_conjuntos_transgressores_dec']:.1f}%** dos conjuntos em transgressão). Na ponta oposta de alta confiabilidade, "
-        f"**{melhor_dist['sigla_agente']} ({melhor_dist['uf']})** operou com índice de severidade de **{melhor_dist['indice_severidade_dec']:.2f}x**.\n"
-        f"2. **Conjuntos Críticos e Impacto ao Consumidor (Pergunta 2):** O conjunto **#{1} {top1_conj['nome_conjunto']} ({top1_conj['sigla_agente']})** "
-        f"lidera o impacto ao consumidor com **{top1_conj['uc_horas_excedentes']:,.0f} consumidor-horas perdidas acima da meta** "
-        f"(DEC apurado de {top1_conj['dec_apurado']:.2f}h vs limite de {top1_conj['dec_limite']:.2f}h), seguido por "
-        f"**{top2_conj['nome_conjunto']} ({top2_conj['sigla_agente']})** com **{top2_conj['uc_horas_excedentes']:,.0f} UC-horas excedentes**.\n"
-        f"3. **Perfil Físico-Elétrico × Qualidade da Rede (Pergunta 3):** Conjuntos classificados como **{perfil_critico['perfil_fisico_conjunto']}** "
-        f"apresentaram DEC médio de **{perfil_critico['dec_medio_apurado']:.2f}h** (meta média de {perfil_critico['dec_medio_limite']:.2f}h) "
-        f"e taxa de transgressão de **{perfil_critico['taxa_transgressao_dec_pct']:.1f}%**, confirmando o peso da extensão de alimentadores "
-        f"e do tempo de deslocamento de equipes em redes rurais/extensas e o alto impacto populacional nas transgressões metropolitanas.\n"
-        f"4. **Recomendação de Engenharia e Regulação:** Priorizar religadores automáticos telecomandados (Self-Healing) e poda preventiva "
-        f"pré-verão nos conjuntos metropolitanos transgressores da **{pior_dist['sigla_agente']}**, onde o produto `Desvio DEC × UCs` "
-        f"maximiza o risco de compensações financeiras (DIC/FIC) e sanções da fiscalização ANEEL."
+        f"### 📋 Parecer Executivo Regulatório — Ciclo {ano_ref} (PRODIST Módulo 8)\n\n"
+        f"| Dimensão Analisada | Destaque Principal | Indicador Apurado | Referência / Meta ANEEL |\n"
+        f"| :--- | :--- | :--- | :--- |\n"
+        f"| **Maior Pressão Regulatória** | **{pior_dist['sigla_agente']} ({pior_dist['uf']})** | DEC: **{_dec(pior_dist['dec_apurado_ponderado'])} h** ({_dec(pior_dist['indice_severidade_dec'])}x) | Limite: **{_dec(pior_dist['dec_limite_ponderado'])} h** |\n"
+        f"| **Benchmark de Confiabilidade** | **{melhor_dist['sigla_agente']} ({melhor_dist['uf']})** | Severidade: **{_dec(melhor_dist['indice_severidade_dec'])}x** | Limite: **{_dec(melhor_dist['dec_limite_ponderado'])} h** |\n"
+        f"| **Conjunto Mais Crítico (#1)** | **{nome_top1} ({top1_conj['sigla_agente']})** | **{_mil(top1_conj['uc_horas_excedentes'])}** UC-h excedentes | DEC: {_dec(top1_conj['dec_apurado'])} h vs. {_dec(top1_conj['dec_limite'])} h |\n"
+        f"| **Perfil Físico Mais Exposto** | **{perfil_critico['perfil_fisico_conjunto']}** | Transgressão: **{_pct(perfil_critico['taxa_transgressao_dec_pct'])}%** | DEC Médio: {_dec(perfil_critico['dec_medio_apurado'])} h |\n\n"
+        f"---\n\n"
+        f"#### 📌 1. Conformidade por Distribuidora (Pergunta 1)\n"
+        f"* **Concessionária Crítica:** A **{pior_dist['sigla_agente']} ({pior_dist['uf']})** lidera o ranking de severidade em {ano_ref}, "
+        f"com DEC médio ponderado de **{_dec(pior_dist['dec_apurado_ponderado'])} h** frente ao teto regulatório de **{_dec(pior_dist['dec_limite_ponderado'])} h** "
+        f"(Índice de Severidade de **{_dec(pior_dist['indice_severidade_dec'])}x** e **{_pct(pior_dist['pct_conjuntos_transgressores_dec'])}%** dos conjuntos em transgressão).\n"
+        f"* **Referência Positiva:** Na outra extremidade, a **{melhor_dist['sigla_agente']} ({melhor_dist['uf']})** manteve operação dentro dos parâmetros da ANEEL, "
+        f"com índice de severidade de **{_dec(melhor_dist['indice_severidade_dec'])}x**.\n\n"
+        f"#### 🚨 2. Conjuntos Críticos e Impacto ao Consumidor (Pergunta 2)\n"
+        f"* **1º Lugar em Impacto:** O conjunto **{nome_top1} ({top1_conj['sigla_agente']})** gerou **{_mil(top1_conj['uc_horas_excedentes'])} consumidor-horas perdidas acima da meta** "
+        f"(DEC apurado de **{_dec(top1_conj['dec_apurado'])} h** contra limite de **{_dec(top1_conj['dec_limite'])} h**).\n"
+        f"* **2º Lugar em Impacto:** O conjunto **{nome_top2} ({top2_conj['sigla_agente']})** acumulou **{_mil(top2_conj['uc_horas_excedentes'])} consumidor-horas excedentes**, "
+        f"evidenciando alta concentração de risco regulatório em grandes centros urbanos.\n\n"
+        f"#### 🌐 3. Perfil Físico-Elétrico × Qualidade da Rede (Pergunta 3)\n"
+        f"* Conjuntos de perfil **{perfil_critico['perfil_fisico_conjunto']}** registraram DEC médio de **{_dec(perfil_critico['dec_medio_apurado'])} h** "
+        f"(meta média de **{_dec(perfil_critico['dec_medio_limite'])} h**) e taxa de violação de **{_pct(perfil_critico['taxa_transgressao_dec_pct'])}%**.\n"
+        f"* Enquanto redes rurais extensas elevam o **DEC absoluto** pelo tempo de deslocamento das equipes de campo, "
+        f"as transgressões em conjuntos metropolitanos multiplicam o volume de **Consumidor × Horas**, elevando as compensações financeiras (DIC/FIC).\n\n"
+        f"> **💡 Recomendação de Engenharia e Regulação:** Priorizar a instalação de religadores automáticos telecomandados (*Self-Healing*) "
+        f"e cronograma intensivo de poda preventiva pré-verão nos conjuntos metropolitanos transgressores da **{pior_dist['sigla_agente']}**, "
+        f"mitigando o produto `Desvio DEC × UCs` e a exposição a penalidades da fiscalização ANEEL."
     )
 
 
@@ -148,6 +170,10 @@ def generate_ai_executive_summary(
 
 
 if __name__ == "__main__":
+    import sys
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     with duckdb.connect(str(DEFAULT_DB_PATH)) as conn:
         resumo = generate_ai_executive_summary(conn)

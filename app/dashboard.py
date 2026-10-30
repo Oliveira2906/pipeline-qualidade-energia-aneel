@@ -102,10 +102,14 @@ def main() -> None:
     df_parecer = query_marts("SELECT * FROM marts.mart_parecer_executivo_ia LIMIT 1")
     if not df_parecer.empty:
         with st.expander("🤖 Parecer Executivo Regulatório (Camada Marts + IA)", expanded=True):
-            st.markdown(df_parecer.iloc[0]["parecer_markdown"])
-            st.caption(
-                f"Gerado por: `{df_parecer.iloc[0]['modelo_gerador']}` em `{df_parecer.iloc[0]['gerado_em']}`"
-            )
+            with st.container(border=True):
+                st.markdown(df_parecer.iloc[0]["parecer_markdown"])
+                st.divider()
+                st.caption(
+                    f"⚙️ **Fonte:** `marts.mart_parecer_executivo_ia` | "
+                    f"**Motor:** `{df_parecer.iloc[0]['modelo_gerador']}` | "
+                    f"**Atualizado em:** `{df_parecer.iloc[0]['gerado_em']}`"
+                )
 
     # 3. Pergunta 1 e Pergunta 2: Conformidade das Distribuidoras e Ranking de Conjuntos Críticos
     c_left, c_right = st.columns(2)
@@ -129,9 +133,14 @@ def main() -> None:
             [int(ano_selecionado)],
         )
         fig_dist = px.bar(
-            df_perf,
+            df_perf.rename(
+                columns={
+                    "dec_apurado_ponderado": "DEC Apurado Ponderado",
+                    "dec_limite_ponderado": "DEC Limite Ponderado",
+                }
+            ),
             x="sigla_agente",
-            y=["dec_apurado_ponderado", "dec_limite_ponderado"],
+            y=["DEC Apurado Ponderado", "DEC Limite Ponderado"],
             barmode="group",
             title=f"DEC Apurado Ponderado vs. Limite Regulatório ANEEL ({ano_selecionado})",
             labels={"value": "Horas Anuais (DEC)", "sigla_agente": "Distribuidora", "variable": "Indicador"},
@@ -221,12 +230,21 @@ def main() -> None:
             [int(ano_selecionado)],
         )
         fig_perfil = px.bar(
-            df_perfil,
+            df_perfil.rename(
+                columns={
+                    "dec_medio_apurado": "DEC Médio Apurado",
+                    "dec_medio_limite": "DEC Médio Limite",
+                }
+            ),
             x="perfil_fisico_conjunto",
-            y=["dec_medio_apurado", "dec_medio_limite"],
+            y=["DEC Médio Apurado", "DEC Médio Limite"],
             barmode="group",
             title="DEC Médio Apurado vs. Limite por Perfil Físico-Elétrico do Conjunto",
-            labels={"value": "Horas (DEC)", "perfil_fisico_conjunto": "Perfil Físico do Conjunto"},
+            labels={
+                "value": "Horas (DEC)",
+                "perfil_fisico_conjunto": "Perfil Físico do Conjunto",
+                "variable": "Indicador",
+            },
         )
         st.plotly_chart(fig_perfil, use_container_width=True)
 
@@ -278,7 +296,22 @@ def main() -> None:
         st.plotly_chart(fig_evol, use_container_width=True)
 
     st.subheader("Tabela Detalhada da Camada `marts.mart_ranking_conjuntos_criticos`")
-    st.dataframe(df_conj, use_container_width=True, hide_index=True)
+    df_tabela_exibicao = df_conj.rename(
+        columns={
+            "ranking_criticidade_ano": "Ranking Criticidade Ano",
+            "nome_conjunto": "Nome Conjunto",
+            "sigla_agente": "Sigla Agente",
+            "uf": "UF",
+            "perfil_fisico_conjunto": "Perfil Físico Conjunto",
+            "dec_apurado": "DEC Apurado",
+            "dec_limite": "DEC Limite",
+            "desvio_dec_horas": "Desvio DEC Horas",
+            "uc_horas_excedentes": "UC Horas Excedentes",
+            "status_regulatorio": "Status Regulatório",
+        }
+    )
+    df_tabela_exibicao["Nome Conjunto"] = df_tabela_exibicao["Nome Conjunto"].str.title()
+    st.dataframe(df_tabela_exibicao, use_container_width=True, hide_index=True)
 
 
 if __name__ == "__main__":
