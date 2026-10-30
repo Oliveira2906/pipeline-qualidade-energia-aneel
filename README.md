@@ -1,7 +1,18 @@
-# Pipeline de Qualidade da Distribuição de Energia Elétrica (ANEEL — DEC & FEC)
+# ⚡ Pipeline de Qualidade da Distribuição de Energia Elétrica (ANEEL — DEC & FEC)
 
 > **O Desafio Final: O Seu Pipeline, do Zero**  
 > Engenharia de Dados ponta a ponta com **Python, SQL (DuckDB), IA (`google-genai`), Testes Unitários (`pytest`), Git e Streamlit**.
+
+---
+
+## 📋 Resumo Executivo dos Indicadores (Ciclo 2024 — Camada `marts`)
+
+| Dimensão Analisada | Destaque Principal | Indicador Apurado | Referência / Meta ANEEL |
+| :--- | :--- | :--- | :--- |
+| **Maior Pressão Regulatória** | **ENEL SP (SP)** | DEC: **13,08 h** (Severidade: **1,75x**) | Limite: **7,48 h** |
+| **Benchmark de Confiabilidade** | **CELESC-DIS (SC)** | Severidade: **0,92x** | Limite: **7,39 h** |
+| **Conjunto Mais Crítico (#1)** | **Interlagos (ENEL SP)** | **1.125.378** UC-h excedentes | DEC: 13,27 h vs. 7,20 h |
+| **Perfil Físico Mais Exposto** | **Rural / Rede Extensa** | Transgressão: **100,0%** | DEC Médio: 25,63 h |
 
 ---
 
@@ -26,33 +37,33 @@ O pipeline extrai e integra **3 tabelas oficiais** conectadas pelas chaves `IdeC
 
 ## 2. As Perguntas de Negócio e o que os Indicadores Respondem
 
-### Pergunta 1 — Conformidade Regulatória das Distribuidoras
-> *Quais concessionárias possuem o maior percentual de conjuntos elétricos violando os limites anuais de DEC e FEC definidos pela ANEEL, e qual o Índice de Severidade Regulatória ($\text{DEC}_{\text{apurado}} / \text{DEC}_{\text{limite}}$)?*
+### 📌 Pergunta 1 — Conformidade Regulatória das Distribuidoras
+> *Quais concessionárias possuem o maior percentual de conjuntos elétricos violando os limites anuais de DEC e FEC definidos pela ANEEL, e qual o Índice de Severidade Regulatória (`DEC Apurado / DEC Limite`)?*
 
 * **Indicador na camada `marts`:** `marts.mart_performance_distribuidoras`
 * **Achado Analítico (Ciclo 2024):**
-  * **ENEL SP (SP)** apresentou o maior Índice de Severidade Regulatória de DEC (**1,65x** o limite ANEEL, com DEC apurado ponderado de **12,35h** contra meta de **7,50h** e **100%** dos conjuntos avaliados em transgressão).
-  * **EQUATORIAL GO (GO)** operou com severidade de **1,49x** (DEC ponderado de **18,39h** vs. limite de **12,31h**).
+  * **ENEL SP (SP)** apresentou o maior Índice de Severidade Regulatória de DEC (**1,75x** o limite ANEEL, com DEC apurado ponderado de **13,08 h** contra meta de **7,48 h** e **100%** dos conjuntos avaliados em transgressão).
+  * **EQUATORIAL GO (GO)** operou com severidade de **1,49x** (DEC ponderado de **18,39 h** vs. limite de **12,31 h**).
   * Concessionárias como **COPEL-DIS (PR)** (**0,98x**), **CPFL PAULISTA (SP)** (**0,94x**) e **CELESC-DIS (SC)** (**0,92x**) mantiveram o DEC global ponderado abaixo do teto regulatório.
 
-### Pergunta 2 — Impacto Real ao Consumidor (Consumidor × Horas sem Energia)
-> *Quais conjuntos elétricos concentram o maior volume absoluto de horas-consumidor perdidas acima da meta regulatória ($\max(0, \text{DEC}_{\text{apurado}} - \text{DEC}_{\text{limite}}) \times \text{UCs Atendidas}$)?*
+### 🚨 Pergunta 2 — Impacto Real ao Consumidor (Consumidor × Horas sem Energia)
+> *Quais conjuntos elétricos concentram o maior volume absoluto de horas-consumidor perdidas acima da meta regulatória (`(DEC Apurado - DEC Limite) × UCs Atendidas`)?*
 
 * **Indicador na camada `marts`:** `marts.mart_ranking_conjuntos_criticos` (`uc_horas_excedentes` e `ranking_criticidade_ano`)
 * **Achado Analítico (Ciclo 2024):**
-  1. **#1 INTERLAGOS (ENEL SP):** **1.097.568 consumidor-horas excedentes** (DEC apurado de 13,27h vs. limite de 7,20h em 185.400 UCs).
-  2. **#2 BAIXADA NOVA IGUAÇU (LIGHT - RJ):** **1.078.000 consumidor-horas excedentes** (DEC apurado de 15,80h vs. limite de 10,20h em 192.500 UCs).
-  3. **#3 ITAPECERICA DA SERRA (ENEL SP):** **985.332 consumidor-horas excedentes** (DEC apurado de 21,96h vs. limite de 11,50h).
+  1. **#1 Interlagos (ENEL SP):** **1.125.378 consumidor-horas excedentes** (DEC apurado de 13,27 h vs. limite de 7,20 h em 185.400 UCs).
+  2. **#2 Baixada Nova Iguaçu (LIGHT - RJ):** **1.078.000 consumidor-horas excedentes** (DEC apurado de 15,80 h vs. limite de 10,20 h em 192.500 UCs).
+  3. **#3 Itapecerica da Serra (ENEL SP):** **985.332 consumidor-horas excedentes** (DEC apurado de 21,96 h vs. limite de 11,50 h).
 
-### Pergunta 3 — Perfil Físico-Elétrico × Confiabilidade da Rede
-> *Como a densidade de consumidores (UCs por $\text{km}^2$) e a extensão da rede se relacionam com o estouro de DEC (tempo de reparo/deslocamento) vs. FEC (frequência de falhas)?*
+### 🌐 Pergunta 3 — Perfil Físico-Elétrico × Confiabilidade da Rede
+> *Como a densidade de consumidores (`UCs por km²`) e a extensão da rede se relacionam com o estouro de DEC (tempo de reparo/deslocamento) vs. FEC (frequência de falhas)?*
 
 * **Indicador na camada `marts`:** `marts.mart_perfil_fisico_qualidade`
 * **Achado Analítico:**
-  * Conjuntos de perfil **Rural / Rede Extensa** (extensão média > 3.800 km de rede) apresentam o maior DEC absoluto (**25,63h** vs. limite de **18,17h**, desvio médio de **+7,47h**), reflexo direto das longas distâncias de patrulhamento e recomposição.
+  * Conjuntos de perfil **Rural / Rede Extensa** (extensão média > 3.800 km de rede) apresentam o maior DEC absoluto (**25,63 h** vs. limite de **18,17 h**, desvio médio de **+7,47 h**), reflexo direto das longas distâncias de patrulhamento e recomposição.
   * Já nos conjuntos **Urbano / Metropolitano** e **Urbano Alta Densidade**, embora o DEC absoluto seja menor, cada hora de estouro multiplica-se por mais de 150 mil UCs por conjunto, gerando o maior risco financeiro de compensações regulatórias (DIC/FIC).
 
-### Pergunta 4 — Trajetória e Sazonalidade Operacional
+### 📈 Pergunta 4 — Trajetória e Sazonalidade Operacional
 > *Como evolui a continuidade do fornecimento ao longo dos meses (período chuvoso/verão vs. período seco) e entre os anos de 2022 a 2024?*
 
 * **Indicador na camada `marts`:** `marts.mart_evolucao_continuidade`
@@ -141,23 +152,23 @@ flowchart LR
 ## 5. Como Executar o Projeto
 
 ### 1. Instalar dependências
-```bash
+```powershell
 python -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
+.\.venv\Scripts\pip install -r requirements.txt
 ```
 
-### 2. Executar o pipeline completo (`raw` $\rightarrow$ `refined` $\rightarrow$ `marts` $\rightarrow$ `IA`)
-```bash
-.venv\Scripts\python -m src.run_pipeline
+### 2. Executar o pipeline completo (`raw` -> `refined` -> `marts` -> `IA`)
+```powershell
+.\.venv\Scripts\python.exe -m src.run_pipeline
 ```
 *(Opcional: defina `GEMINI_API_KEY` no arquivo `.env` para gerar o parecer via `gemini-3.8-flash` na Interactions API).*
 
 ### 3. Rodar os testes unitários isolados (`pytest` em memória, sem tocar no banco do projeto)
-```bash
-.venv\Scripts\pytest -v
+```powershell
+.\.venv\Scripts\python.exe -m pytest -v
 ```
 
 ### 4. Abrir o Dashboard (Seção 07 — lê exclusivamente da camada `marts`)
-```bash
-.venv\Scripts\streamlit run app/dashboard.py
+```powershell
+.\.venv\Scripts\python.exe -m streamlit run app/dashboard.py --server.port 8502
 ```
